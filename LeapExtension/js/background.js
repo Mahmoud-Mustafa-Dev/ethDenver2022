@@ -69,8 +69,8 @@ const CLAIMS = encodeURIComponent(
 	})
 ); // initialize which information about the user we want
 const STATE = encodeURIComponent('meet' + Math.random().toString(36).substring(2, 15)); //helps personalize our OpenID request
-//localStorage["logged-in"] = false;
-let user_signed_in = false//localStorage["logged-in"];
+
+let user_signed_in = false;
 let ACCESS_TOKEN = null;
 let interval_id = null;
 
