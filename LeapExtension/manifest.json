@@ -24,6 +24,7 @@
     "permissions": [
         "identity",
         "tabs",
+        "storage",
         "https://www.youtube.com/watch*",
         "https://www.twitch.tv/"
     ]

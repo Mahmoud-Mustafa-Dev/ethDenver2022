@@ -4,18 +4,16 @@
 
 - It checks the current tab you are in and if it was on a ytb video 
   we execute the foreground script to track watchTime
-
-- we need to make sure to excute script only once on each tab.
-
-- We need to figure out why excuting foreground works on mac but not on windows
 */
 
 console.log('from background');
+
+//track youtube
 chrome.tabs.onActivated.addListener(tab => {
     chrome.tabs.get(tab.tabId, current_tab_info => {
         console.log(current_tab_info.url);
         if(/^https:\/\/www\.youtube\.com\/watch/.test(current_tab_info.url)) {
-            chrome.tabs.executeScript(null, {file: './js/foreground.js'}, () => console.log('foreground is injected'));
+            chrome.tabs.executeScript(null, {file: './js/ytb-foreground.js'}, () => console.log('ytb-foreground is injected'));
         }
     });
 });
@@ -27,11 +25,32 @@ chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
     if (url !== undefined && changeinfo.status == "complete") {
         console.log(url);
         if (/^https:\/\/www\.youtube\.com\/watch/.test(tab.url)) {
-            chrome.tabs.executeScript(null, {file: './js/foreground.js'}, () => console.log('foreground is injected'));
+            chrome.tabs.executeScript(null, {file: './js/ytb-foreground.js'}, () => console.log('ytb-foreground is injected'));
         }  
     }
 });
 
+//track twitch
+chrome.tabs.onActivated.addListener(tab => {
+    chrome.tabs.get(tab.tabId, current_tab_info => {
+        console.log(current_tab_info.url);
+        if(/^https:\/\/www\.twitch\.tv\//.test(current_tab_info.url)) {
+            chrome.tabs.executeScript(null, {file: './js/twitch-foreground.js'}, () => console.log('twitch foreground is injected'));
+        }
+    });
+});
+
+
+//this allows us to know if current tab was updated with the desired url.
+chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
+    var url = tab.url;
+    if (url !== undefined && changeinfo.status == "complete") {
+        console.log(url);
+        if (/^https:\/\/www\.twitch\.tv\//.test(tab.url)) {
+            chrome.tabs.executeScript(null, {file: './js/twitch-foreground.js'}, () => console.log('twitch foreground is injected'));
+        }  
+    }
+});
 
 
 // YTB
@@ -69,8 +88,26 @@ function create_ytb_endpoint() {
 	return openid_url;
 }
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+function getTwitchUserData(access_token) {
+    
+	fetch('https://api.twitch.tv/helix/users?', {
+		method: "get",
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded',
+			'Authorization': 'Bearer ' + access_token,
+			'Client-Id': TWITCH_CLIENT_ID
+		}
+	})
+  	.then((response) => {
+    	return response.json();
+  	})
+  	.then((myJson) => {
+    	console.log(myJson);
+  	});
+}
 
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	if (request.message === "login-twitch") {
 		if (user_signed_in) {
 		    //TODO handle when user is already signed in
@@ -89,9 +126,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 					id_token = id_token.substring(0, id_token.indexOf('&'));
 					ACCESS_TOKEN = redirect_url.substring(redirect_url.indexOf('access_token=') + 13);
 					ACCESS_TOKEN = ACCESS_TOKEN.substring(0, ACCESS_TOKEN.indexOf('&'));
+                    getTwitchUserData(ACCESS_TOKEN);
+	
 					const user_info = KJUR.jws.JWS.readSafeJSONString(b64utoutf8(id_token.split(".")[1]));
-
+					localStorage["user-info"] = user_info;
 					if (user_info.iss === 'https://id.twitch.tv/oauth2' && user_info.aud === TWITCH_CLIENT_ID) {
+						localStorage["logged-in"] = true; 
 						user_signed_in = true;
 
 						interval_id = setInterval(() => {
@@ -103,13 +143,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 								.then(res => {
 									console.log(res.status)
 									if (res.status === 401) {
+										localStorage["logged-in"] = false; 
 										user_signed_in = false;
 										clearInterval(interval_id);
 									}
 								})
 								.catch(err => console.log(err))
 						}, 3600000);
-						// TODO Store login status and change user view
+						// change user view
 						/*
 						chrome.browserAction.setPopup({ popup: "new screen when logged in" }, () => {
 							sendResponse({ message: "success" });
@@ -121,7 +162,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		}
 		return true;
 	} else if (request.message === "logout-twitch") {
-		user_signed_in = false;
+		//user_signed_in = false;
 		// TODO Store login status and change user view
 		/*
 		chrome.browserAction.setPopup({ popup: "new screen when logged out" }, () => {
@@ -147,13 +188,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
                     if ((user_info.iss === 'https://accounts.google.com' || user_info.iss === 'accounts.google.com')
                         && user_info.aud === YTB_CLIENT_ID) {
-						// TODO Store login status and change user view
+						// TODO change user view
 						/*
 						chrome.browserAction.setPopup({ popup: "new screen when logged in" }, () => {
 							sendResponse({ message: "success" });
 						});
 						*/
                         console.log("User successfully signed in.");
+						localStorage["logged-in"] = true; 
                         user_signed_in = true;
                     } else {
                         // invalid credentials
@@ -166,7 +208,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		return true;
 		}
 	} else if (request.message === "logout-ytb") {
-		// TODO Store login status and change user view
+		// TODO change user view
+		localStorage["logged-in"] = false; 
 		user_signed_in = false;
 		return true;
 	} 

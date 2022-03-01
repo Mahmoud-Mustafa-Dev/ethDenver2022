@@ -1,3 +1,4 @@
+
 document.getElementById('twitch-sign-in').addEventListener('click', function () {
     chrome.runtime.sendMessage({ message: 'login-twitch' }, function (response) {
         if (response.message === 'success') {
