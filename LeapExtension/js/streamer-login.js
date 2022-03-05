@@ -2,15 +2,36 @@
 document.getElementById('twitch-sign-in').addEventListener('click', function () {
     chrome.runtime.sendMessage({ message: 'login-twitch' }, function (response) {
         if (response.message === 'success') {
-            console.log("we signed in using twitch");
+            console.log("streamer signed in using twitch");
+            chrome.browserAction.setPopup({ popup: "./streamer-logged-in.html" }, () => {
+                
+                if(response.user_data) {
+                    //here we get the user data for the first time so we need to store it
+                    //you can access information like this: response.user_data.id
+                    console.log("here is the user data: " + JSON.stringify(response.user_data));
+    
+                    // after we get a success response from the data base that we stored data we should acitvate the 
+                    // line below:
+
+                    // window.location.href = './streamer-logged-in.html';
+                } else {
+                    //user is already signed in
+                    window.location.href = './streamer-logged-in.html';
+                }
+			});
         } 
     });
 });
 
-document.getElementById('ytb-sign-in').addEventListener('click', function () {
+//halting the ytb stuff temoporarily 
+
+/*document.getElementById('ytb-sign-in').addEventListener('click', function () {
     chrome.runtime.sendMessage({ message: 'login-ytb' }, function (response) {
         if (response.message === 'success') {
-            console.log("we signed in using ytb");
+            console.log("streamer signed in using ytb");
+            chrome.browserAction.setPopup({ popup: "./streamer-logged-in.html" }, () => {
+                window.close();
+			});
         } 
     });
-});
+});*/

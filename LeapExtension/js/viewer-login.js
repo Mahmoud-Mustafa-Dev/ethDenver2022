@@ -1,7 +1,10 @@
-/*document.getElementById('twitch-sign-in').addEventListener('click', function () {
+document.getElementById('twitch-sign-in').addEventListener('click', function () {
     chrome.runtime.sendMessage({ message: 'login-twitch' }, function (response) {
         if (response.message === 'success') {
-            console.log("we signed in using twitch");
+            console.log("viewer signed in using twitch");
+            chrome.browserAction.setPopup({ popup: "./viewer-logged-in.html" }, () => {
+                window.location.href = './viewer-logged-in.html';
+			});
         } 
     });
 });
@@ -9,15 +12,18 @@
 document.getElementById('ytb-sign-in').addEventListener('click', function () {
     chrome.runtime.sendMessage({ message: 'login-ytb' }, function (response) {
         if (response.message === 'success') {
-            console.log("we signed in using ytb");
+            console.log("viewer signed in using ytb");
+            chrome.browserAction.setPopup({ popup: "./viewer-logged-in.html" }, () => {
+                window.location.href = './viewer-logged-in.html';
+			});
         } 
     });
 });
-*/
+
 
 //TODO login viewers via ytb or twitch
 
-document.getElementById('sync-wallet-btn').addEventListener('click', function () {
+/*document.getElementById('sync-wallet-btn').addEventListener('click', function () {
    // sync_wallet();
     console.log(localStorage["wallet-address"]);
 });
@@ -33,4 +39,4 @@ function sync_wallet() {
     } else {
     console.log("this wallet address is not valid");
     }
-}
+}*/
