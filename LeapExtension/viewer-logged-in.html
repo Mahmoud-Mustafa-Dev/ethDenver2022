@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8" />
     <meta name="description" content="Viewers landing page is where they sync their wallet 
     in order for leap to pay them depending on leap rules">
     <meta name="keywords" content="viewers, sync wallets" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Leap Extension</title>
+    <title>Wallet sync</title>
 
     <link rel="stylesheet" type="text/css" href="css/popup.css">
-    
 </head>
 
 <body>
@@ -18,19 +18,19 @@
         <img width="100" height="100" src="/images/leap_logo_128.png">
     </div>
 
+
     <div class="p-container">
         <h2>
-            For viewers to be enrolled in leap, they are required to authenticate through one of the following 
-            streaming services.
+            In order for us to send you crypto we need you to sync your wallet
+            using your public wallet address.
         </h2>
     </div>
 
-    <br/>
-    <br/>
-    <div class="buttons-container">
-        <input id='twitch-sign-in' type="image" src="/images/twitch_icon.png" width="50px" height="50px" />
-        <input id='ytb-sign-in' type="image" src="/images/youtube_icon.png" width="50px" height="50px" />
-    </div>
-    <script src="./js/viewer-login.js"></script>
+    <br />
+    <input id="wallet-input" class="c-input" type="text" placeholder="Enter Wallet Adress" />
+    <br />
+    <br />
+    <button id="sync-wallet-btn" class="single-leap-btn">Sync Wallet</button>
+    
 </body>
 </html>
