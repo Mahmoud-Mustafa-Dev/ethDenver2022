@@ -88,6 +88,7 @@ function create_ytb_endpoint() {
 	return openid_url;
 }
 
+
 function getTwitchUserData(access_token) {
     
 	fetch('https://api.twitch.tv/helix/users?', {
@@ -102,8 +103,12 @@ function getTwitchUserData(access_token) {
     	return response.json();
   	})
   	.then((myJson) => {
-    	console.log(myJson);
-  	});
+			console.log(myJson);
+		});
+
+	
+	
+	
 }
 
 
@@ -156,6 +161,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 							sendResponse({ message: "success" });
 						});
 						*/
+						
 					}
 				}
 			});
