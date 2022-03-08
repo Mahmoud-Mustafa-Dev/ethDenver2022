@@ -8,6 +8,10 @@
 
 console.log('from background');
 
+// when u want to log out for testing purposes after logging in - uncomment the following piece of code:
+// localStorage["logged-in"] = false;
+// localStorage["user-data"] = undefined;
+
 //track youtube
 chrome.tabs.onActivated.addListener(tab => {
     chrome.tabs.get(tab.tabId, current_tab_info => {
@@ -70,7 +74,7 @@ const CLAIMS = encodeURIComponent(
 ); // initialize which information about the user we want
 const STATE = encodeURIComponent('meet' + Math.random().toString(36).substring(2, 15)); //helps personalize our OpenID request
 
-let user_signed_in = false;
+let user_signed_in = JSON.parse(localStorage["logged-in"]);
 let ACCESS_TOKEN = null;
 let interval_id = null;
 
@@ -88,9 +92,7 @@ function create_ytb_endpoint() {
 	return openid_url;
 }
 
-
-function getTwitchUserData(access_token) {
-    
+function getTwitchUserData(access_token, sendResponse)  {
 	fetch('https://api.twitch.tv/helix/users?', {
 		method: "get",
 		headers: {
@@ -103,20 +105,19 @@ function getTwitchUserData(access_token) {
     	return response.json();
   	})
   	.then((myJson) => {
-			console.log(myJson);
+		sendResponse(myJson);
 		});
 
 	
-	
-	
-}
+};
 
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	if (request.message === "login-twitch") {
 		if (user_signed_in) {
 		    //TODO handle when user is already signed in
-			console.log("User is already signed in.");
+			console.log("twitch User is already signed in.");
+			sendResponse({ message: "success" });
 		} else {
 			// sign user in with Twitch
 			chrome.identity.launchWebAuthFlow({
@@ -131,14 +132,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 					id_token = id_token.substring(0, id_token.indexOf('&'));
 					ACCESS_TOKEN = redirect_url.substring(redirect_url.indexOf('access_token=') + 13);
 					ACCESS_TOKEN = ACCESS_TOKEN.substring(0, ACCESS_TOKEN.indexOf('&'));
-                    getTwitchUserData(ACCESS_TOKEN);
-	
 					const user_info = KJUR.jws.JWS.readSafeJSONString(b64utoutf8(id_token.split(".")[1]));
-					localStorage["user-info"] = user_info;
+
 					if (user_info.iss === 'https://id.twitch.tv/oauth2' && user_info.aud === TWITCH_CLIENT_ID) {
 						localStorage["logged-in"] = true; 
 						user_signed_in = true;
-
+						getTwitchUserData(ACCESS_TOKEN, function(userData) {
+							localStorage["user-data"] = userData.data[0];
+							sendResponse({ message: "success", user_data: userData.data[0]});
+						  });
+						
 						interval_id = setInterval(() => {
 							fetch('https://id.twitch.tv/oauth2/validate', {
 								headers: {
@@ -155,12 +158,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 								})
 								.catch(err => console.log(err))
 						}, 3600000);
-						// change user view
-						/*
-						chrome.browserAction.setPopup({ popup: "new screen when logged in" }, () => {
-							sendResponse({ message: "success" });
-						});
-						*/
+
 						
 					}
 				}
@@ -176,9 +174,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		});
 		*/
 		return true;
-	} else if(request.message === "login-ytb") {
-		if (user_signed_in) {
+	} 
+	/*else if(request.message === "login-ytb") {
+		console.log(user_signed_in);
+		console.log(localStorage["logged-in"]);
+		if (JSON.parse(user_signed_in) === true) {
 			console.log("User is already signed in.");
+			console.log(user_signed_in);
 		} else {
 			// sign user in with YTB
 			chrome.identity.launchWebAuthFlow({
@@ -191,15 +193,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     let id_token = redirect_url.substring(redirect_url.indexOf('id_token=') + 9);
                     id_token = id_token.substring(0, id_token.indexOf('&'));
                     const user_info = KJUR.jws.JWS.readSafeJSONString(b64utoutf8(id_token.split(".")[1]));
-
+                    console.log(user_info);
                     if ((user_info.iss === 'https://accounts.google.com' || user_info.iss === 'accounts.google.com')
                         && user_info.aud === YTB_CLIENT_ID) {
 						// TODO change user view
-						/*
-						chrome.browserAction.setPopup({ popup: "new screen when logged in" }, () => {
-							sendResponse({ message: "success" });
-						});
-						*/
                         console.log("User successfully signed in.");
 						localStorage["logged-in"] = true; 
                         user_signed_in = true;
@@ -218,6 +215,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		localStorage["logged-in"] = false; 
 		user_signed_in = false;
 		return true;
-	} 
+	} */
 });
 

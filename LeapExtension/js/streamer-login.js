@@ -1,45 +1,50 @@
-// var databaseApp = require('.\database.js');
 
 document.getElementById('twitch-sign-in').addEventListener('click', function () {
     chrome.runtime.sendMessage({ message: 'login-twitch' }, function (response) {
-    /*    if (response.message === 'success') {
-            console.log("we signed in using twitch");
-        } */ console.log("$$$" + response);
-    });
-});
-
-document.getElementById('ytb-sign-in').addEventListener('click', function () {
-    chrome.runtime.sendMessage({ message: 'login-ytb' }, function (response) {
         if (response.message === 'success') {
-            console.log("we signed in using ytb");
+            console.log("streamer signed in using twitch");
+            chrome.browserAction.setPopup({ popup: "./streamer-logged-in.html" }, () => {
+                if(response.user_data) {
+                    //here we get the user data for the first time so we need to store it
+                    //you can access information like this: response.user_data.id
+                    console.log("here is the user data: " + JSON.stringify(response.user_data));
+                    console.log(JSON.stringify(localStorage["user-data"]));
+
+                    addUserToDatabase(JSON.stringify(localStorage["user-data"]));
+                    // after we get a success response from the data base that we stored data we should acitvate the 
+                    // line below:
+
+                    // window.location.href = './streamer-logged-in.html';
+                } else {
+                    //user is already signed in
+                    window.location.href = './streamer-logged-in.html';
+                }
+			});
         } 
     });
 });
 
-// make a test json file here and call app from database.js
-// need to pass a variable from here into a place holder variable in the write function
-// maybe write function needs to be named and figure out async
+//halting the ytb stuff temoporarily 
+
+/*document.getElementById('ytb-sign-in').addEventListener('click', function () {
+    chrome.runtime.sendMessage({ message: 'login-ytb' }, function (response) {
+        if (response.message === 'success') {
+            console.log("streamer signed in using ytb");
+            chrome.browserAction.setPopup({ popup: "./streamer-logged-in.html" }, () => {
+                window.close();
+			});
+        } 
+    });
+});*/
 
 
+function addUserToDatabase(user_data) {
+    chrome.runtime.sendMessage({ message: 'append-user', body: user_data }, function (response) {
+        if(response.message === 'success') {
+            console.log("data was submitted to the database.");
 
-const jsonObj = {
-    "id": "43417819",
-    "login": "lucyspear",
-    "display_name": "LucySpear",
-    "type": "",
-    "broadcaster_type": "",
-    "description": "",
-    "profile_image_url": "https://static-cdn.jtvnw.net/user-default-pictures-uv/998f01ae-def8-11e9-b95c-784f43822e80-profile_image-300x300.png",
-    "offline_image_url": "",
-    "view_count": 110,
-    "email": "xyz@gmail.com",
-    "created_at": "2013-05-11T08:53:24Z"
-};
-
-/*
- check for isStreamer https://www.javascripttutorial.net/javascript-array-some/
-    if isStreamer write to sheet2 instead of sheet1 in sheets Range */
-
-// want to pass jsonUserArray variable to the google sheets append function line 66 in database.js
-
-var jsonUserArray = [jsonObj.login, jsonObj.email, jsonObj.created_at];
+            //after we get a successful response we need to move to another screen.
+            //window.location.href = './streamer-logged-in.html';
+        }
+    });
+}

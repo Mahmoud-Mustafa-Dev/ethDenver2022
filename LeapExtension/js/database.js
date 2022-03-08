@@ -1,90 +1,41 @@
-//webserver boilerplate
+console.log("here we initialize the database");
+/*
+Initialize database here.
+*/
 
-var express = require("express")
+const data = {
+    "email": "example",
+    "id": "qwe",
+    "created_at": "12/12",
+    "role": "streamer"
+};
 
-// import google api
-
-var { google } = require("googleapis");
-
-// creating express app
-
-var app = express();
-
-// creating single root endpoint, request and response
-
-
-
-
-
-
-app.get("/", async (req, res) => {
-
-    // authenticating with google api
-
-    var auth = new google.auth.GoogleAuth({
-
-        keyFile: "credentials.json",
-        scopes: "https://www.googleapis.com/auth/spreadsheets"
-
-    });
-
-    // request client object for auth
-
-    var client = await auth.getClient();
-
-    // instance of Google Sheets API
-
-    var googleSheets = google.sheets({ version: "v4", auth: client });
-
-    // spreadsheet variable
-
-    var spreadsheetId = "1-f2vZxgWQ1cbstJIB4GGp0SEqMuqZKR3JEZocHuSYOQ";
-
-
-    // Get metadata about spreadsheet
-
-    const metaData = await googleSheets.spreadsheets.get({
-        auth,
-        spreadsheetId,
-    });
-
-
-    // Read rows from spreadsheet
-
-    const getRows = await googleSheets.spreadsheets.values.get({
-        auth,
-        spreadsheetId,
-        // sets the range with the sheetname in spreadsheet and the cells of that sheet
-        range: "Sheet1!A:C",
-
-    });
-    //read rows call
-
-
-
-    // write row(s) to spreadsheet
-    await googleSheets.spreadsheets.values.append({
-        auth,
-        spreadsheetId,
-        range: "Sheet1!A:C",
-
-        // two useful variables RAW and USER_ENTERED which attempts to pass numbers as int, date as date, etc
-        valueInputOption: "USER_ENTERED",
-
-        // info you want to pass into spreadsheet
-
-        resource: {
-
-            // for each row you want to add, add another nested array []
-            values: [jsonUserArray],
-
-
-        }
-
+fetch('https://1tz1ahylf7.execute-api.us-east-1.amazonaws.com/items', {
+    method: 'PUT', // or 'POST'
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+})
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
     })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
 
-    
-    res.send(getRows.data);
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if(request.message === "append-user") {
+        console.log("here we need to submit user data to the database");
+        console.log(JSON.stringify(request.body));
+        //Here we get the user data and we need to add it to ther database now.
+
+
+
+
+
+        //once the data was added to the database send a success response.
+        sendResponse({message: "success"});
+    }
 });
-
-app.listen(1337, (req, res) => console.log("Listening on 1337")); // listen
