@@ -1,7 +1,15 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\build",
+    "\\contracts",
+    "\\gnosis-multisig",
+    "\\LeapExtension",
+    "\\LeapExtension\\js",
+    "\\migrations",
+    "\\test",
+    "\\twitchBot"
   ],
-  "SelectedNode": "\\migrations",
+  "SelectedNode": "\\LeapExtension\\js\\database.js",
   "PreviewInSolutionExplorer": false
 }
