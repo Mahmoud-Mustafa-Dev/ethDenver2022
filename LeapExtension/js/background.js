@@ -106,6 +106,7 @@ function getTwitchUserData(access_token, sendResponse)  {
   	})
   	.then((myJson) => {
 		sendResponse(myJson);
+
   	});
 };
 
