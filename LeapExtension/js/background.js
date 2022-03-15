@@ -8,16 +8,23 @@
 
 console.log('from background');
 
+try {
+	importScripts('./database.js');
+  } catch (e) {
+	console.error(e);
+  }
+
+
 // when u want to log out for testing purposes after logging in - uncomment the following piece of code:
-// localStorage["logged-in"] = false;
-// localStorage["user-data"] = undefined;
+//localStorage["logged-in"] = false;
+//localStorage["user-data"] = undefined;
 
 //track youtube
 chrome.tabs.onActivated.addListener(tab => {
     chrome.tabs.get(tab.tabId, current_tab_info => {
         console.log(current_tab_info.url);
         if(/^https:\/\/www\.youtube\.com\/watch/.test(current_tab_info.url)) {
-            chrome.tabs.executeScript(null, {file: './js/ytb-foreground.js'}, () => console.log('ytb-foreground is injected'));
+            chrome.scripting.executeScript({target: {tabId: tab.tabId, allFrames: true}, files: ['./js/ytb-foreground.js']}, () => console.log('ytb-foreground is injected'));
         }
     });
 });
@@ -29,7 +36,7 @@ chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
     if (url !== undefined && changeinfo.status == "complete") {
         console.log(url);
         if (/^https:\/\/www\.youtube\.com\/watch/.test(tab.url)) {
-            chrome.tabs.executeScript(null, {file: './js/ytb-foreground.js'}, () => console.log('ytb-foreground is injected'));
+            chrome.scripting.executeScript({target: {tabId: tabid, allFrames: true}, files: ['./js/ytb-foreground.js']}, () => console.log('ytb-foreground is injected'));
         }  
     }
 });
@@ -39,7 +46,7 @@ chrome.tabs.onActivated.addListener(tab => {
     chrome.tabs.get(tab.tabId, current_tab_info => {
         console.log(current_tab_info.url);
         if(/^https:\/\/www\.twitch\.tv\//.test(current_tab_info.url)) {
-            chrome.tabs.executeScript(null, {file: './js/twitch-foreground.js'}, () => console.log('twitch foreground is injected'));
+            chrome.scripting.executeScript({target: {tabId: tab.tabId, allFrames: true}, files: ['./js/twitch-foreground.js']}, () => console.log('twitch foreground is injected'));
         }
     });
 });
@@ -51,7 +58,7 @@ chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
     if (url !== undefined && changeinfo.status == "complete") {
         console.log(url);
         if (/^https:\/\/www\.twitch\.tv\//.test(tab.url)) {
-            chrome.tabs.executeScript(null, {file: './js/twitch-foreground.js'}, () => console.log('twitch foreground is injected'));
+            chrome.scripting.executeScript({target: {tabId: tabid, allFrames: true}, files: ['./js/twitch-foreground.js']}, () => console.log('twitch foreground is injected'));
         }  
     }
 });
@@ -74,7 +81,7 @@ const CLAIMS = encodeURIComponent(
 ); // initialize which information about the user we want
 const STATE = encodeURIComponent('meet' + Math.random().toString(36).substring(2, 15)); //helps personalize our OpenID request
 
-let user_signed_in = JSON.parse(localStorage["logged-in"]);
+let user_signed_in = false;//JSON.parse(localStorage["logged-in"]);
 let ACCESS_TOKEN = null;
 let interval_id = null;
 
@@ -105,10 +112,12 @@ function getTwitchUserData(access_token, sendResponse)  {
     	return response.json();
   	})
   	.then((myJson) => {
+		console.log("here is the user data: " + JSON.stringify(myJson));
 		sendResponse(myJson);
+	});
 
-  	});
-};
+}
+
 
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -131,13 +140,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 					id_token = id_token.substring(0, id_token.indexOf('&'));
 					ACCESS_TOKEN = redirect_url.substring(redirect_url.indexOf('access_token=') + 13);
 					ACCESS_TOKEN = ACCESS_TOKEN.substring(0, ACCESS_TOKEN.indexOf('&'));
-					const user_info = KJUR.jws.JWS.readSafeJSONString(b64utoutf8(id_token.split(".")[1]));
+					//const user_info = KJUR.jws.JWS.readSafeJSONString(b64utoutf8(id_token.split(".")[1]));
 
-					if (user_info.iss === 'https://id.twitch.tv/oauth2' && user_info.aud === TWITCH_CLIENT_ID) {
-						localStorage["logged-in"] = true; 
-						user_signed_in = true;
+					//if (user_info.iss === 'https://id.twitch.tv/oauth2' && user_info.aud === TWITCH_CLIENT_ID) {
+						//localStorage["logged-in"] = true; 
+						//user_signed_in = true;
+
 						getTwitchUserData(ACCESS_TOKEN, function(userData) {
-							localStorage["user-data"] = userData.data[0];
+							//localStorage["user-data"] = userData.data[0];
 							sendResponse({ message: "success", user_data: userData.data[0]});
 						  });
 						
@@ -150,8 +160,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 								.then(res => {
 									console.log(res.status)
 									if (res.status === 401) {
-										localStorage["logged-in"] = false; 
-										user_signed_in = false;
+										//localStorage["logged-in"] = false; 
+										//user_signed_in = false;
 										clearInterval(interval_id);
 									}
 								})
@@ -159,7 +169,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 						}, 3600000);
 
 						
-					}
+					//}
 				}
 			});
 		}

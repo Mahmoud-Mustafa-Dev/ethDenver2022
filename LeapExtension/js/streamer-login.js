@@ -4,14 +4,15 @@ document.getElementById('twitch-sign-in').addEventListener('click', function () 
         
         if (response.message === 'success') {
             console.log("streamer signed in using twitch");
-            chrome.browserAction.setPopup({ popup: "./streamer-logged-in.html" }, () => {
+        
+            chrome.action.setPopup({ popup: "./streamer-logged-in.html" }, () => {
                 if(response.user_data) {
                     //here we get the user data for the first time so we need to store it
                     //you can access information like this: response.user_data.id
                     console.log("here is the user data: " + JSON.stringify(response.user_data));
-                    console.log(JSON.stringify(localStorage["user-data"]));
+                    
 
-                    addUserToDatabase(JSON.stringify(localStorage["user-data"]));
+                    addUserToDatabase(response.user_data);
                     // after we get a success response from the data base that we stored data we should acitvate the 
                     // line below:
 
